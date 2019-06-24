@@ -22,6 +22,9 @@
 
 #include "fehelp.h"
 
+#include <flint/mpoly.h>
+
+
 
 const char SHORT_OPTS_STRING[] = "bdhpqstvxec:r:u:";
 
@@ -307,6 +310,20 @@ static const char* feOptAction(feOptIndex opt)
         feOptDumpVersionTuple();
         return NULL;
       }
+
+        case FE_OPT_THREADS:
+        {
+            slong nthreads = (slong)feOptSpec[FE_OPT_THREADS].value;
+            nthreads = FLINT_MAX(nthreads, WORD(1));
+            nthreads = FLINT_MIN(nthreads, MPOLY_DEFAULT_THREAD_LIMIT);
+            flint_set_num_threads(nthreads);
+            int * cpu_affinities = new int[nthreads];
+            for (slong i = 0; i < nthreads; i++)
+                cpu_affinities[i] = (int)i;
+            flint_set_thread_affinity(cpu_affinities, nthreads);
+            delete[] cpu_affinities;
+            return NULL;
+        }
 
       default:
         return NULL;

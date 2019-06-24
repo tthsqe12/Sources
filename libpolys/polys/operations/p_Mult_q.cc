@@ -286,6 +286,42 @@ poly _p_Mult_q(poly p, poly q, const int copy, const ring r)
   if (!nCoeff_is_Domain(r->cf))
     return _p_Mult_q_Normal_ZeroDiv(p, q, copy, r);
 #endif
+
+    BOOLEAN pure_polys = (p_GetComp(p,r) == 0) && (p_GetComp(q,r) ==0 );
+    #ifdef HAVE_FLINT
+    #if __FLINT_RELEASE >= 20503
+    if (true)
+    {
+        fmpq_mpoly_ctx_t ctx;
+        if (pure_polys && rField_is_Q(r) && !convSingRFlintR(ctx, r))
+        {
+            poly res = Flint_Mult_MP(p, q, ctx, r);
+            if (!copy)
+            {
+                p_Delete(&p, r);
+                p_Delete(&q, r);
+            }
+            return res;
+        }
+    }
+    if (true)
+    {
+        nmod_mpoly_ctx_t ctx;
+        if (pure_polys && rField_is_Zp(r) && !convSingRFlintR(ctx, r))
+        {
+            poly res = Flint_Mult_MP(p, q, ctx, r);
+            if (!copy)
+            {
+                p_Delete(&p,r);
+                p_Delete(&q,r);
+            }
+            return res;
+        }
+    }
+    #endif
+    #endif
+
+
   int lp, lq, l;
   poly pt;
 
@@ -300,43 +336,7 @@ poly _p_Mult_q(poly p, poly q, const int copy, const ring r)
     lp = lq;
     lq = l;
   }
-  BOOLEAN pure_polys=(p_GetComp(p,r)==0) && (p_GetComp(q,r)==0);
-  #ifdef HAVE_FLINT
-  #if __FLINT_RELEASE >= 20503
-  if (lq>MIN_FLINT_QQ)
-  {
-    fmpq_mpoly_ctx_t ctx;
-    if (pure_polys && rField_is_Q(r) && !convSingRFlintR(ctx,r))
-    {
-      lp=pLength(p);
-      //printf("mul in flint\n");
-      poly res=Flint_Mult_MP(p,lp,q,lq,ctx,r);
-      if (!copy)
-      {
-        p_Delete(&p,r);
-        p_Delete(&q,r);
-      }
-      return res;
-    }
-  }
-  if (lq>MIN_FLINT_Zp)
-  {
-    nmod_mpoly_ctx_t ctx;
-    if (pure_polys && rField_is_Zp(r) && !convSingRFlintR(ctx,r))
-    {
-      lp=pLength(p);
-      //printf("mul in flint\n");
-      poly res=Flint_Mult_MP(p,lp,q,lq,ctx,r);
-      if (!copy)
-      {
-        p_Delete(&p,r);
-        p_Delete(&q,r);
-      }
-      return res;
-    }
-  }
-  #endif
-  #endif
+
   if (lq < MIN_LENGTH_BUCKET || TEST_OPT_NOT_BUCKETS)
     return _p_Mult_q_Normal(p, q, copy, r);
   else if (pure_polys
