@@ -115,6 +115,9 @@
 // bit 5: do no try automatic conversions
 #define NO_CONVERSION    32
 
+#include "polys/flintconv.h"
+#include "polys/flint_mpoly.h"
+
 static BOOLEAN check_valid(const int p, const int op);
 
 /*=============== types =====================*/
@@ -1009,6 +1012,41 @@ static BOOLEAN jjTIMES_P(leftv res, leftv u, leftv v)
 {
   poly a;
   poly b;
+
+    if (u->next == NULL && v->next == NULL)
+    {
+        a = (poly)u->Data();
+        b = (poly)v->Data();
+
+        BOOLEAN ok = (a != NULL) && (b != NULL) && (p_GetComp(a, currRing) == 0) && (p_GetComp(b, currRing) == 0);
+
+#ifdef HAVE_FLINT
+#if __FLINT_RELEASE >= 20503
+        if (ok && rField_is_Q(currRing))
+        {
+            fmpq_mpoly_ctx_t ctx;
+            if (!convSingRFlintR(ctx, currRing))
+            {
+                res->data = (char *)(Flint_Mult_MP(a, b, ctx, currRing));
+                pNormalize((poly)res->data);
+                return FALSE;
+            }
+        }
+        else if (ok && rField_is_Zp(currRing))
+        {
+            nmod_mpoly_ctx_t ctx;
+            if (!convSingRFlintR(ctx, currRing))
+            {
+                res->data = (char *)(Flint_Mult_MP(a, b, ctx, currRing));
+                pNormalize((poly)res->data);
+                return FALSE;
+            }
+        }
+#endif
+#endif
+    }
+
+
   if (v->next==NULL)
   {
     a=(poly)u->CopyD(POLY_CMD); // works also for VECTOR_CMD
@@ -1282,6 +1320,43 @@ static BOOLEAN jjDIV_N(leftv res, leftv u, leftv v)
 }
 static BOOLEAN jjDIV_P(leftv res, leftv u, leftv v)
 {
+  poly a;
+  poly b;
+
+    if (u->next == NULL && v->next == NULL)
+    {
+        a = (poly)u->Data();
+        b = (poly)v->Data();
+
+        BOOLEAN ok = (a != NULL) && (b != NULL) && (p_GetComp(a, currRing) == 0) && (p_GetComp(b, currRing) == 0);
+
+#ifdef HAVE_FLINT
+#if __FLINT_RELEASE >= 20503
+        if (ok && rField_is_Q(currRing))
+        {
+            fmpq_mpoly_ctx_t ctx;
+            if (!convSingRFlintR(ctx, currRing))
+            {
+                res->data = (char *)(Flint_Divides_MP(a, b, ctx, currRing));
+                pNormalize((poly)res->data);
+                return FALSE;
+            }
+        }
+        else if (ok && rField_is_Zp(currRing))
+        {
+            nmod_mpoly_ctx_t ctx;
+            if (!convSingRFlintR(ctx, currRing))
+            {
+                res->data = (char *)(Flint_Divides_MP(a, b, ctx, currRing));
+                pNormalize((poly)res->data);
+                return FALSE;
+            }
+        }
+#endif
+#endif
+    }
+
+
   poly q=(poly)v->CopyD();
   poly p=(poly)(u->CopyD());
   res->data=(void*)(p_Divide(p /*(poly)(u->CopyD())*/ ,
@@ -2404,6 +2479,44 @@ static BOOLEAN jjGCD_N(leftv res, leftv u, leftv v)
 }
 static BOOLEAN jjGCD_P(leftv res, leftv u, leftv v)
 {
+  poly a;
+  poly b;
+
+    if (u->next == NULL && v->next == NULL)
+    {
+        a = (poly)u->Data();
+        b = (poly)v->Data();
+
+        BOOLEAN ok = (a != NULL) && (b != NULL) && (p_GetComp(a, currRing) == 0) && (p_GetComp(b, currRing) == 0);
+
+#ifdef HAVE_FLINT
+#if __FLINT_RELEASE >= 20503
+        if (ok && rField_is_Q(currRing))
+        {
+            fmpq_mpoly_ctx_t ctx;
+            if (!convSingRFlintR(ctx, currRing))
+            {
+                res->data = (char *)(Flint_Gcd_MP(a, b, ctx, currRing));
+                pNormalize((poly)res->data);
+                return FALSE;
+            }
+        }
+        else if (ok && rField_is_Zp(currRing))
+        {
+            nmod_mpoly_ctx_t ctx;
+            if (!convSingRFlintR(ctx, currRing))
+            {
+                res->data = (char *)(Flint_Gcd_MP(a, b, ctx, currRing));
+                pNormalize((poly)res->data);
+                return FALSE;
+            }
+        }
+#endif
+#endif
+    }
+
+
+
   res->data=(void *)singclap_gcd((poly)(u->CopyD(POLY_CMD)),
                                  (poly)(v->CopyD(POLY_CMD)),currRing);
   return FALSE;
@@ -8437,6 +8550,7 @@ static BOOLEAN iiExprArith2TabIntern(leftv res, leftv a, int op, leftv b,
         {
           break;// leave loop, goto error handling
         }
+
         a->CleanUp();
         b->CleanUp();
         //Print("op: %d,result typ:%d\n",op,res->rtyp);

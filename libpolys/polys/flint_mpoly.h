@@ -22,11 +22,15 @@ BOOLEAN convSingRFlintR(fmpq_mpoly_ctx_t ctx, const ring r);
 void convSingPFlintMP(fmpq_mpoly_t res, fmpq_mpoly_ctx_t ctx, poly p, const ring r, slong thread_limit);
 poly convFlintMPSingP(fmpq_mpoly_t p, fmpq_mpoly_ctx_t ctx, const ring r, slong thread_limit);
 poly Flint_Mult_MP(poly p, poly q, fmpq_mpoly_ctx_t ctx, const ring r);
+poly Flint_Gcd_MP(poly p, poly q, fmpq_mpoly_ctx_t ctx, const ring r);
+poly Flint_Divides_MP(poly p, poly q, fmpq_mpoly_ctx_t ctx, const ring r);
 
 BOOLEAN convSingRFlintR(nmod_mpoly_ctx_t ctx, const ring r);
 void convSingPFlintMP(nmod_mpoly_t res, nmod_mpoly_ctx_t ctx, poly p, const ring r, slong thread_limit);
 poly convFlintMPSingP(nmod_mpoly_t p, nmod_mpoly_ctx_t ctx, const ring r, slong thread_limit);
 poly Flint_Mult_MP(poly p, poly q, nmod_mpoly_ctx_t ctx, const ring r);
+poly Flint_Gcd_MP(poly p, poly q, nmod_mpoly_ctx_t ctx, const ring r);
+poly Flint_Divides_MP(poly p, poly q, nmod_mpoly_ctx_t ctx, const ring r);
 
 #endif
 #endif

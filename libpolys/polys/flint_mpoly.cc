@@ -18,15 +18,24 @@
 #include "polys/monomials/p_polys.h"
 
 /*
-system("--threads", 5);
-ring r = 0, (z,y,x), lp;
-poly p = (1+x+3*y+z/2)^3;
-p*p;
+system("--threads", 2);
+system("--ticks-per-sec",1000);
+ring r = 32009, (x,y,z,u,v), lp;
+poly b = (1+x+y^2+z^3+u^4+v^5)^16;
+poly c = (1+v+u^2+z^3+y^4+x^5)^16;
+int t = timer; poly a = b*c; timer - t;
 
 
-ring r = 101, (z,y,x), lp;
-poly p = (1+x+3*y+z/2)^3;
-p*p;
+system("--threads", 1);
+system("--ticks-per-sec",1000);
+ring r = 32009, (x,y,z,u), lp;
+poly b = (1+x+y+z+u)^30; poly c = (1+u+z+y+x)^30;
+int t = rtimer; poly a = b*c; rtimer - t;
+
+ring r = 0, (z,y,x), lp; poly p = (1+x+3*y+z/2)^3; p*p;
+ring r = 0, (z,y,x), lp; x*y/x;
+ring r = 0,(x,y,z),lp;poly a = x^2-y^2;poly b = x^3-y^3;gcd(a,b);
+ring r = 2,(x,y,z),lp;poly a = x^2-y^2;poly b = x^3-y^3;gcd(a,b);
 
 */
 
@@ -240,7 +249,6 @@ void convSingPFlintMP(
     for (slong i = 0; i < num_handles; i++)
     {
         thread_pool_wait(global_thread_pool, handles[i]);
-printf("sing -> flint wait done %d\n", i);
     }
 
     /* sign of content should match sign of first coeff */
@@ -279,7 +287,7 @@ printf("sing -> flint wait done %d\n", i);
         FLINT_ASSERT(0);
     }
 
-printf("res: "); fmpq_mpoly_print_pretty(res, (const char**) r->names,ctx);PrintLn();
+//printf("res: "); fmpq_mpoly_print_pretty(res, (const char**) r->names,ctx);PrintLn();
 }
 
 
@@ -385,7 +393,7 @@ poly convFlintMPSingP(
     }
 
     /* construct pieces */
-printf("constructing pieces\n");
+//printf("constructing pieces\n");
 
     for (slong i = 0; i < num_handles; i++)
         thread_pool_wake(global_thread_pool, handles[i], convert_fmpq_mpoly_to_sing_worker, args + i);
@@ -393,10 +401,9 @@ printf("constructing pieces\n");
     for (slong i = 0; i < num_handles; i++)
     {
         thread_pool_wait(global_thread_pool, handles[i]);
-printf("flint -> sing wait done %d\n", i);
     }
 
-printf("joining\n");
+//printf("joining\n");
 
     /* join pieces */
     poly p = NULL;
@@ -420,11 +427,49 @@ printf("joining\n");
 
 poly Flint_Mult_MP(poly p, poly q, fmpq_mpoly_ctx_t ctx, const ring r)
 {
+printf("fmpq_mpoly_mul called\n");
+
     fmpq_mpoly_t pp, qq, res;
     convSingPFlintMP(pp, ctx, p, r, MPOLY_DEFAULT_THREAD_LIMIT);
     convSingPFlintMP(qq, ctx, q, r, MPOLY_DEFAULT_THREAD_LIMIT);
     fmpq_mpoly_init(res, ctx);
     fmpq_mpoly_mul(res, pp, qq, ctx);
+    poly pres = convFlintMPSingP(res, ctx, r, MPOLY_DEFAULT_THREAD_LIMIT);
+    fmpq_mpoly_clear(res, ctx);
+    fmpq_mpoly_clear(pp, ctx);
+    fmpq_mpoly_clear(qq, ctx);
+    fmpq_mpoly_ctx_clear(ctx);
+    p_Test(pres, r);
+    return pres;
+}
+
+poly Flint_Gcd_MP(poly p, poly q, fmpq_mpoly_ctx_t ctx, const ring r)
+{
+printf("fmpq_mpoly_gcd called\n");
+
+    fmpq_mpoly_t pp, qq, res;
+    convSingPFlintMP(pp, ctx, p, r, MPOLY_DEFAULT_THREAD_LIMIT);
+    convSingPFlintMP(qq, ctx, q, r, MPOLY_DEFAULT_THREAD_LIMIT);
+    fmpq_mpoly_init(res, ctx);
+    fmpq_mpoly_gcd(res, pp, qq, ctx);
+    poly pres = convFlintMPSingP(res, ctx, r, MPOLY_DEFAULT_THREAD_LIMIT);
+    fmpq_mpoly_clear(res, ctx);
+    fmpq_mpoly_clear(pp, ctx);
+    fmpq_mpoly_clear(qq, ctx);
+    fmpq_mpoly_ctx_clear(ctx);
+    p_Test(pres, r);
+    return pres;
+}
+
+poly Flint_Divides_MP(poly p, poly q, fmpq_mpoly_ctx_t ctx, const ring r)
+{
+printf("fmpq_mpoly_divides called\n");
+
+    fmpq_mpoly_t pp, qq, res;
+    convSingPFlintMP(pp, ctx, p, r, MPOLY_DEFAULT_THREAD_LIMIT);
+    convSingPFlintMP(qq, ctx, q, r, MPOLY_DEFAULT_THREAD_LIMIT);
+    fmpq_mpoly_init(res, ctx);
+    fmpq_mpoly_divides(res, pp, qq, ctx);
     poly pres = convFlintMPSingP(res, ctx, r, MPOLY_DEFAULT_THREAD_LIMIT);
     fmpq_mpoly_clear(res, ctx);
     fmpq_mpoly_clear(pp, ctx);
@@ -600,7 +645,7 @@ void convSingPFlintMP(
         FLINT_ASSERT(0);
     }
 
-printf("res: "); nmod_mpoly_print_pretty(res, (const char**) r->names,ctx);PrintLn();
+//printf("res: "); nmod_mpoly_print_pretty(res, (const char**) r->names,ctx);PrintLn();
 }
 
 
@@ -703,7 +748,7 @@ poly convFlintMPSingP(
     }
 
     /* construct pieces */
-printf("constructing pieces\n");
+//printf("constructing pieces\n");
 
     for (slong i = 0; i < num_handles; i++)
         thread_pool_wake(global_thread_pool, handles[i], convert_nmod_mpoly_to_sing_worker, args + i);
@@ -711,7 +756,7 @@ printf("constructing pieces\n");
     for (slong i = 0; i < num_handles; i++)
         thread_pool_wait(global_thread_pool, handles[i]);
 
-printf("joining\n");
+//printf("joining\n");
 
     /* join pieces */
     poly p = NULL;
@@ -736,6 +781,8 @@ printf("joining\n");
 
 poly Flint_Mult_MP(poly p, poly q, nmod_mpoly_ctx_t ctx, const ring r)
 {
+printf("nmod_mpoly_mul called\n");
+
     nmod_mpoly_t pp, qq, res;
     convSingPFlintMP(pp, ctx, p, r, MPOLY_DEFAULT_THREAD_LIMIT);
     convSingPFlintMP(qq, ctx, q, r, MPOLY_DEFAULT_THREAD_LIMIT);
@@ -749,5 +796,43 @@ poly Flint_Mult_MP(poly p, poly q, nmod_mpoly_ctx_t ctx, const ring r)
     p_Test(pres, r);
     return pres;
 }
+
+poly Flint_Gcd_MP(poly p, poly q, nmod_mpoly_ctx_t ctx, const ring r)
+{
+printf("nmod_mpoly_gcd called\n");
+
+    nmod_mpoly_t pp, qq, res;
+    convSingPFlintMP(pp, ctx, p, r, MPOLY_DEFAULT_THREAD_LIMIT);
+    convSingPFlintMP(qq, ctx, q, r, MPOLY_DEFAULT_THREAD_LIMIT);
+    nmod_mpoly_init(res, ctx);
+    nmod_mpoly_gcd(res, pp, qq, ctx);
+    poly pres = convFlintMPSingP(res, ctx, r, MPOLY_DEFAULT_THREAD_LIMIT);
+    nmod_mpoly_clear(res, ctx);
+    nmod_mpoly_clear(pp, ctx);
+    nmod_mpoly_clear(qq, ctx);
+    nmod_mpoly_ctx_clear(ctx);
+    p_Test(pres, r);
+    return pres;
+}
+
+poly Flint_Divides_MP(poly p, poly q, nmod_mpoly_ctx_t ctx, const ring r)
+{
+printf("nmod_mpoly_divides called\n");
+
+
+    nmod_mpoly_t pp, qq, res;
+    convSingPFlintMP(pp, ctx, p, r, MPOLY_DEFAULT_THREAD_LIMIT);
+    convSingPFlintMP(qq, ctx, q, r, MPOLY_DEFAULT_THREAD_LIMIT);
+    nmod_mpoly_init(res, ctx);
+    nmod_mpoly_gcd(res, pp, qq, ctx);
+    poly pres = convFlintMPSingP(res, ctx, r, MPOLY_DEFAULT_THREAD_LIMIT);
+    nmod_mpoly_clear(res, ctx);
+    nmod_mpoly_clear(pp, ctx);
+    nmod_mpoly_clear(qq, ctx);
+    nmod_mpoly_ctx_clear(ctx);
+    p_Test(pres, r);
+    return pres;
+}
+
 #endif
 #endif

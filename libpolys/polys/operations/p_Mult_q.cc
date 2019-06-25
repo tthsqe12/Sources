@@ -290,7 +290,6 @@ poly _p_Mult_q(poly p, poly q, const int copy, const ring r)
     BOOLEAN pure_polys = (p_GetComp(p,r) == 0) && (p_GetComp(q,r) ==0 );
     #ifdef HAVE_FLINT
     #if __FLINT_RELEASE >= 20503
-    if (true)
     {
         fmpq_mpoly_ctx_t ctx;
         if (pure_polys && rField_is_Q(r) && !convSingRFlintR(ctx, r))
@@ -304,7 +303,6 @@ poly _p_Mult_q(poly p, poly q, const int copy, const ring r)
             return res;
         }
     }
-    if (true)
     {
         nmod_mpoly_ctx_t ctx;
         if (pure_polys && rField_is_Zp(r) && !convSingRFlintR(ctx, r))
