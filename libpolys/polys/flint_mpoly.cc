@@ -18,11 +18,10 @@
 #include "polys/monomials/p_polys.h"
 
 /*
-system("--threads", 2);
+system("--threads", 8);
 system("--ticks-per-sec",1000);
 ring r = 32009, (x,y,z,u,v), lp;
-poly b = (1+x+y^2+z^3+u^4+v^5)^16;
-poly c = (1+v+u^2+z^3+y^4+x^5)^16;
+poly b = (1+x+y^2+z^3+u^4+v^5)^16; poly c = (1+v+u^2+z^3+y^4+x^5)^16;
 int t = timer; poly a = b*c; timer - t;
 
 

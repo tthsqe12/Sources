@@ -8550,7 +8550,6 @@ static BOOLEAN iiExprArith2TabIntern(leftv res, leftv a, int op, leftv b,
         {
           break;// leave loop, goto error handling
         }
-
         a->CleanUp();
         b->CleanUp();
         //Print("op: %d,result typ:%d\n",op,res->rtyp);
